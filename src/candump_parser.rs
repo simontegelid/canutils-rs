@@ -9,7 +9,7 @@ mod tests {
         let exp = DumpEntry {
             timestamp: Timestamp {
                 seconds: 1547046014,
-                nanos: 597158,
+                micros: 597158,
             },
             can_interface: "vcan0".to_string(),
             can_frame: CanFrame {
@@ -28,7 +28,7 @@ mod tests {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Timestamp {
     pub seconds: u64,
-    pub nanos: u64,
+    pub micros: u64,
 }
 
 named!(timestamp<&str, Timestamp>,
@@ -36,9 +36,9 @@ named!(timestamp<&str, Timestamp>,
                  tag!("(")                             >>
         seconds: map_res!(digit1, |d: &str| d.parse()) >>
                  tag!(".")                             >>
-        nanos:   map_res!(digit1, |d: &str| d.parse()) >>
+        micros:  map_res!(digit1, |d: &str| d.parse()) >>
                  tag!(")")                             >>
-        (Timestamp { seconds, nanos })
+        (Timestamp { seconds, micros })
     )
 );
 
