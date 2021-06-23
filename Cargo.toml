@@ -17,6 +17,7 @@ travis-ci = { repository = "marcelbuesing/canutils-rs", branch = "master" }
 [dependencies]
 ansi_term = "0.12"
 anyhow = "1.0"
+hex = "0.3.1"
 can-dbc = "3.0"
 futures = "0.3"
 pretty-hex = "0.2"

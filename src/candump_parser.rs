@@ -1,3 +1,4 @@
+use hex::FromHex;
 use nom::character::complete::{alphanumeric1, digit1, hex_digit1, space0};
 
 #[cfg(test)]
@@ -6,19 +7,63 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let exp = DumpEntry {
+        let exp = LogEntry {
             timestamp: Timestamp {
                 seconds: 1547046014,
                 micros: 597158,
             },
-            can_interface: "vcan0".to_string(),
-            can_frame: CanFrame {
-                frame_id: 123,
-                frame_body: 455,
+            interface: "vcan0".to_string(),
+            frame: CanFrame {
+                can_id: 123,
+                data: vec![1, 199],
+                is_fd: false,
+                fd_flags: 0,
             },
         };
         assert_eq!(
-            dump_entry("(1547046014.597158) vcan0 7B#1C7"),
+            dump_entry("(1547046014.597158) vcan0 7B#01C7"),
+            Ok(("", exp))
+        );
+    }
+
+    #[test]
+    fn it_fd_works() {
+        let exp = LogEntry {
+            timestamp: Timestamp {
+                seconds: 1547046014,
+                micros: 597158,
+            },
+            interface: "vcan0".to_string(),
+            frame: CanFrame {
+                can_id: 123,
+                data: vec![1, 199],
+                is_fd: true,
+                fd_flags: 1,
+            },
+        };
+        assert_eq!(
+            dump_entry("(1547046014.597158) vcan0 7B##101C7"),
+            Ok(("", exp))
+        );
+    }
+
+    #[test]
+    fn it_fd_works2() {
+        let exp = LogEntry {
+            timestamp: Timestamp {
+                seconds: 1547046014,
+                micros: 597158,
+            },
+            interface: "vcan0".to_string(),
+            frame: CanFrame {
+                can_id: 123,
+                data: vec![1, 199],
+                is_fd: true,
+                fd_flags: 3,
+            },
+        };
+        assert_eq!(
+            dump_entry("(1547046014.597158) vcan0 7B##301C7"),
             Ok(("", exp))
         );
     }
@@ -45,48 +90,59 @@ named!(timestamp<&str, Timestamp>,
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct CanFrame {
-    pub frame_id: u32,
-    pub frame_body: u64,
+    pub can_id: u32,
+    pub data: Vec<u8>,
+    pub is_fd: bool,
+    pub fd_flags: u8,
 }
 
-named!(can_frame<&str, CanFrame>,
+named!(frame<&str, CanFrame>,
     do_parse!(
-        frame_id:   map_res!(hex_digit1, |d| u32::from_str_radix(d, 16))  >>
-                    tag!("#")                                             >>
-        frame_body: map_res!(hex_digit1, |d| u64::from_str_radix(d, 16))  >>
-        (CanFrame { frame_id, frame_body })
+        can_id: map_res!(hex_digit1, |d| u32::from_str_radix(d, 16))  >>
+        is_fd: alt!(
+            tag!("##") => {|_|true} |
+            tag!("#") => {|_|false}
+        )                                                             >>
+        fd_flags: switch!(call!(|i| Ok((i, is_fd))),
+            true => map_res!(take!(1), |d| u8::from_str_radix(d, 16)) |
+            false => value!(0)
+        )                                                             >>
+        data:   map_res!(hex_digit1, |d: &str| -> Result<Vec<u8>, _> {
+                    Vec::from_hex(d)
+                })                                                    >>
+        (CanFrame { can_id, data, is_fd, fd_flags })
     )
 );
 
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct DumpEntry {
+pub struct LogEntry {
     timestamp: Timestamp,
-    can_interface: String,
-    can_frame: CanFrame,
+    interface: String,
+    frame: CanFrame,
 }
 
-impl DumpEntry {
+impl LogEntry {
     pub fn timestamp(&self) -> &Timestamp {
         &self.timestamp
     }
 
-    pub fn can_interface(&self) -> &str {
-        &self.can_interface
+    pub fn interface(&self) -> &str {
+        &self.interface
     }
 
-    pub fn can_frame(&self) -> &CanFrame {
-        &self.can_frame
+    pub fn frame(&self) -> &CanFrame {
+        &self.frame
     }
 }
 
-named!(pub dump_entry<&str, DumpEntry>,
+named!(pub dump_entry<&str, LogEntry>,
     do_parse!(
         timestamp:     timestamp     >>
                        space0        >>
-        can_interface: alphanumeric1 >>
+        interface:     alphanumeric1 >>
                        space0        >>
-        can_frame:     can_frame     >>
-        (DumpEntry { timestamp, can_interface: can_interface.to_string(), can_frame })
+        frame:         frame         >>
+        (LogEntry { timestamp, interface: interface.to_string(), frame })
     )
 );

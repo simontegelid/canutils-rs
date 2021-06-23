@@ -85,6 +85,7 @@ dependencies = [
  "anyhow",
  "can-dbc",
  "futures",
+ "hex 0.3.2",
  "nom 5.1.2",
  "pretty-hex",
  "rand",
@@ -255,6 +256,12 @@ name = "hex"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d6a22814455d41612f41161581c2883c0c6a1c41852729b17d5ed88f01e153aa"
+
+[[package]]
+name = "hex"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "805026a5d0141ffc30abb3be3173848ad46a1b1664fe632428479619a3644d77"
 
 [[package]]
 name = "instant"
@@ -607,7 +614,7 @@ version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3101efc6ef5af6f1c1a488241b469757b7a183baca63af958cd90e4696446c80"
 dependencies = [
- "hex",
+ "hex 0.2.0",
  "itertools",
  "libc",
  "nix",
