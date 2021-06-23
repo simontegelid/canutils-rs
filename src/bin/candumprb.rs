@@ -17,7 +17,6 @@ const COLOR_CAN_SFF: Color = Color::Blue;
 const COLOR_CAN_EFF: Color = Color::Red;
 
 const COLOR_NULL: Color = Fixed(242); // grey
-const COLOR_OFFSET: Color = Fixed(242); // grey
 const COLOR_ASCII_PRINTABLE: Color = Color::Cyan;
 const COLOR_ASCII_WHITESPACE: Color = Color::Green;
 const COLOR_ASCII_OTHER: Color = Color::Purple;
@@ -64,18 +63,18 @@ impl Byte {
         }
     }
 
-    fn as_char(self) -> char {
-        use ByteCategory::*;
+    // fn as_char(self) -> char {
+    //     use ByteCategory::*;
 
-        match self.category() {
-            Null => '0',
-            AsciiPrintable => self.0 as char,
-            AsciiWhitespace if self.0 == 0x20 => ' ',
-            AsciiWhitespace => '_',
-            AsciiOther => '•',
-            NonAscii => '×',
-        }
-    }
+    //     match self.category() {
+    //         Null => '0',
+    //         AsciiPrintable => self.0 as char,
+    //         AsciiWhitespace if self.0 == 0x20 => ' ',
+    //         AsciiWhitespace => '_',
+    //         AsciiOther => '•',
+    //         NonAscii => '×',
+    //     }
+    // }
 }
 
 #[derive(Debug, StructOpt)]
